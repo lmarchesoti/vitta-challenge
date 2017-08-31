@@ -31,43 +31,38 @@ def create_territory():
   except KeyError:
     return redirect(url_for('static', filename='territories/incomplete-data.html'))
 
-  #except 
+  except LookupError:
+    return redirect(url_for('static', filename='territories/territory-overlay.html'))
   
-#@app.route('/', methods=['GET'])
-#def list():
-#  """ 
-#  Lista todos os POIs dentro do limite especificado.
-#  Se não houver parâmetros, lista todos os POIs.
-#  """
-#
-#  x = request.args.get('x', type=int)
-#  y = request.args.get('y', type=int)
-#  dmax = request.args.get('dmax', type=int)
-#
-#  # Distance-based search
-#  if (x is not None) and (y is not None) and (dmax is not None):
-#    pois = poi.POI.objects(point__geo_within_center=[(x, y), dmax])
-#
-#  else: # List all POIs
-#    pois = poi.POI.objects
-#
-#  # Imprime POIs na resposta
-#  resp = ''
-#  for p in pois:
-#    resp += str(p)
-#    resp += '\n'
-#
-#  return resp
-#
-#@app.route('/', methods=['POST'])
-#def create():
-#  """ Cria um POI. """
-#
-#  p = poi.POI(name=request.form['name'],
-#	      point={'type': 'Point',
-#		     'coordinates': [int(request.form['x']), int(request.form['y'])]})
-#  p.save()
-#  return str(p)
+@app.route('/territories', methods=['GET'])
+def list():
+
+  tlist = territory.Territory.objects 
+
+  return jsonify(count=len(tlist), data=[t.serialize() for t in tlist])
+
+@app.route('/territories/<_id>', methods=['DELETE'])
+def delete(_id):
+
+  try:
+    obj = territory.Territory.objects(id=_id)[0]
+    obj.delete()
+
+    return jsonify(error=False)
+
+  except IndexError:
+    return redirect(url_for('static', filename='territories/not-found.html'))
+
+@app.route('/territories/<_id>', methods=['GET'])
+def find(_id):
+
+  try:
+    obj = territory.Territory.objects(id=_id)[0].serialize()
+
+    return jsonify(data=obj, error=False)
+
+  except IndexError:
+    return redirect(url_for('static', filename='territories/not-found.html'))
 
 if __name__ == '__main__':
   app.run(host='0.0.0.0', debug=True)

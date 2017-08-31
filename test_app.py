@@ -13,6 +13,12 @@ class TestTerritories(unittest.TestCase):
     app.app.testing = True
     self.app = app.app.test_client()
 
+  def tearDown(self): self.delete_all_territories()
+
+  def delete_all_territories(self):
+    for p in territory.Territory.objects:
+      p.delete()
+
   def test_create_territory(self):
 
     insert_data = { 
@@ -23,10 +29,11 @@ class TestTerritories(unittest.TestCase):
 
     rv = self.app.post('/territories', data=json.dumps(insert_data),
 		       content_type='application/json')
+    item_id = json.loads(rv.data)['data']['id']
 
     resp =  {
 	      "data": {
-		#"id": 1,
+		"id": item_id,
 		"name": "A",
 		"start": { "x": 0, "y": 0 },
 		"end": { "x": 50, "y": 50 },
@@ -72,69 +79,120 @@ class TestTerritories(unittest.TestCase):
 
     self.assertTrue(b'Overlapping Territories\n' in rv.data)
 
-  def tearDown(self): self.delete_all_territories()
+  def test_list_territories(self):
 
-  def delete_all_territories(self):
-    for p in territory.Territory.objects:
-      p.delete()
+    insert_data_1 = { 
+		    "name": "A",
+		    "start": { "x":  0, "y":  0},
+		    "end"  : { "x": 50, "y": 50}
+		  }
 
-#  def test_list_pois(self):
-#
-#    try:
-#      p1 = poi.POI(name='lanchonete', point=(0, 2))
-#      p1.save()
-#
-#      p2 = poi.POI(name='lavanderia', point=(7, 3))
-#      p2.save()
-#
-#      ans = b"""'lanchonete' (x=0, y=2)\n'lavanderia' (x=7, y=3)\n"""
-#
-#      rv = self.app.get('/')
-#      self.assertEquals(rv.data, ans)
-#
-#    finally:
-#      self.delete_all_pois()
-#
-#  def test_create_poi(self):
-#
-#    try:
-#      self.app.post('/', data={'name': 'Posto', 'x': 31, 'y': 18})
-#      self.app.post('/', data={'name': 'Joalheria', 'x': 15, 'y': 12})
-#
-#      pois = poi.POI.objects.order_by('name')
-#
-#      with self.subTest():
-#        self.assertEquals(str(pois[0]), "'Joalheria' (x=15, y=12)")
-#      with self.subTest():
-#        self.assertEquals(str(pois[1]), "'Posto' (x=31, y=18)")
-#
-#    finally:
-#      self.delete_all_pois()
-#
-#  def test_filter_pois(self):
-#
-#    try:
-#
-#      poi.POI(name='Lanchonete', point=(27, 12)).save()
-#      poi.POI(name='Posto', point=(31, 18)).save()
-#      poi.POI(name='Joalheria', point=(15, 12)).save()
-#      poi.POI(name='Floricultura', point=(19, 21)).save()
-#      poi.POI(name='Pub', point=(12, 8)).save()
-#      poi.POI(name='Supermercado', point=(23, 6)).save()
-#      poi.POI(name='Churrascaria', point=(28, 2)).save()
-#
-#      rv = self.app.get('/?x=20&y=10&dmax=10')
-#
-#      ans = b"'Lanchonete' (x=27, y=12)\n'Joalheria' (x=15, y=12)\n'Pub' (x=12, y=8)\n'Supermercado' (x=23, y=6)\n"
-#
-#      self.assertEquals(rv.data, ans)
-#
-#    finally:
-#      self.delete_all_pois()
-#
-#  def delete_all_pois(self):
-#    for p in poi.POI.objects:
-#      p.delete()
+    insert_data_2 = { 
+		    "name": "B",
+		    "start": { "x": 70, "y": 70},
+		    "end"  : { "x": 90, "y": 90}
+		  }
+    
+    rv = self.app.post('/territories', data=json.dumps(insert_data_1),
+		       content_type='application/json')
+    item_id_1 = json.loads(rv.data)['data']['id']
+    rv = self.app.post('/territories', data=json.dumps(insert_data_2),
+		       content_type='application/json')
+    item_id_2 = json.loads(rv.data)['data']['id']
+
+    rv = self.app.get('/territories')
+
+    resp = {
+	    'count': 2,
+	    'data': [
+		  {
+		    "id": item_id_1,
+		    "name": "A",
+		    "start": { "x": 0, "y": 0 },
+		    "end": { "x": 50, "y": 50 },
+		    "area": 2500,
+		    "painted_area": 0
+		  },
+		  {
+		    "id": item_id_2,
+		    "name": "B",
+		    "start": { "x": 70, "y": 70 },
+		    "end": { "x": 90, "y": 90 },
+		    "area": 400,
+		    "painted_area": 0
+		  }
+		]
+	    }
+
+    self.assertEquals(json.loads(rv.data), resp)
+
+  def test_delete_and_not_found(self):
+
+    insert_data = { 
+		    "name": "A",
+		    "start": { "x":  0, "y":  0},
+		    "end"  : { "x": 50, "y": 50}
+		  }
+    
+    rv = self.app.post('/territories', data=json.dumps(insert_data),
+		       content_type='application/json')
+    item_id = json.loads(rv.data)['data']['id']
+    print(item_id)
+
+    rv_delete = self.app.delete('/territories/%s' % item_id)
+
+    with self.subTest():
+      delete_response = { 'error': False }
+      self.assertEquals(delete_response, json.loads(rv_delete.data))
+
+    with self.subTest():
+      rv = self.app.get('/territories/%s' % item_id, follow_redirects=True)
+      self.assertEquals(b'Territory not found\n', rv.data)
+
+  def test_delete_fail(self):
+
+    rv = self.app.delete('/territories/59a8870b00d26e0001d8daac', follow_redirects=True)
+
+    self.assertEquals(b'Territory not found\n', rv.data)
+    
+
+  def test_find_single(self):
+
+    insert_data_1 = { 
+		    "name": "A",
+		    "start": { "x":  0, "y":  0},
+		    "end"  : { "x": 50, "y": 50}
+		  }
+
+    insert_data_2 = { 
+		    "name": "B",
+		    "start": { "x": 70, "y": 70},
+		    "end"  : { "x": 90, "y": 90}
+		  }
+    
+    rv = self.app.post('/territories', data=json.dumps(insert_data_1),
+		       content_type='application/json')
+    item_id = json.loads(rv.data)['data']['id']
+
+    rv = self.app.post('/territories', data=json.dumps(insert_data_2),
+		       content_type='application/json')
+
+    rv = self.app.get('/territories/%s' % item_id)
+
+    resp = {
+	    'data': 
+		  {
+		    "id": item_id,
+		    "name": "A",
+		    "start": { "x": 0, "y": 0 },
+		    "end": { "x": 50, "y": 50 },
+		    "area": 2500,
+		    "painted_area": 0
+		  },
+	    'error': False
+	    }
+
+    self.assertEquals(json.loads(rv.data), resp)
 
 if __name__ == '__main__':
   unittest.main()
