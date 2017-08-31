@@ -5,6 +5,8 @@ import unittest
 
 import app
 
+from domain import territory
+
 class TestTerritories(unittest.TestCase):
 
   def setUp(self):
@@ -24,7 +26,7 @@ class TestTerritories(unittest.TestCase):
 
     resp =  {
 	      "data": {
-		"id": 1,
+		#"id": 1,
 		"name": "A",
 		"start": { "x": 0, "y": 0 },
 		"end": { "x": 50, "y": 50 },
@@ -35,6 +37,46 @@ class TestTerritories(unittest.TestCase):
 	    }
 
     self.assertEquals(json.loads(rv.data), resp)
+
+  def test_create_territory_incomplete_data(self):
+
+    insert_data = { 
+		    #"name": "A",
+		    "start": { "x":  0, "y":  0},
+		    "end"  : { "x": 50, "y": 50}
+		  }
+
+    rv = self.app.post('/territories', data=json.dumps(insert_data),
+		       content_type='application/json', follow_redirects=True)
+
+    self.assertEquals(b'Incomplete data\n', rv.data)
+
+  def test_create_territory_overlapping(self):
+
+    insert_data_1 = { 
+		    "name": "A",
+		    "start": { "x":  0, "y":  0},
+		    "end"  : { "x": 50, "y": 50}
+		  }
+
+    insert_data_2 = { 
+		    "name": "B",
+		    "start": { "x":  1, "y": 20},
+		    "end"  : { "x": 70, "y": 30}
+		  }
+
+    rv = self.app.post('/territories', data=json.dumps(insert_data_1),
+		       content_type='application/json')
+    rv = self.app.post('/territories', data=json.dumps(insert_data_2),
+		       content_type='application/json')
+
+    self.assertTrue(b'Overlapping Territories\n' in rv.data)
+
+  def tearDown(self): self.delete_all_territories()
+
+  def delete_all_territories(self):
+    for p in territory.Territory.objects:
+      p.delete()
 
 #  def test_list_pois(self):
 #

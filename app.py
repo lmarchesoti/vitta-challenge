@@ -1,7 +1,8 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, redirect, url_for
 import mongoengine as me
 
 #from xyinc import poi
+from domain import territory
 
 app = Flask(__name__)
 
@@ -15,13 +16,22 @@ def root_get(): pass
 def create_territory():
   """ Creates a new territory and its related squares. """
 
-  data = request.get_json()
+  try:
+    data = request.get_json()
 
-  name = data['name']
-  start = data['start']
-  end = data['end']
+    name = data['name']
+    start = data['start']
+    end = data['end']
 
-  return jsonify(data={'error': False})
+    t = territory.Territory(name=name, start=start, end=end)
+    t.save()
+
+    return jsonify(data=t.serialize(), error=False)
+
+  except KeyError:
+    return redirect(url_for('static', filename='territories/incomplete-data.html'))
+
+  #except 
   
 #@app.route('/', methods=['GET'])
 #def list():
