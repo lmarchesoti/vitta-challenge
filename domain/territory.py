@@ -2,6 +2,7 @@
 
 import mongoengine as me
 from mongoengine.queryset.visitor import Q
+from domain import square as sq
 
 class Territory(me.Document):
   """ Implements a territory. """
@@ -12,6 +13,7 @@ class Territory(me.Document):
   end = me.DictField(required=True)
   area = me.FloatField(default=0.)
   painted_area = me.IntField(default=0)
+  squares = me.ListField(me.ReferenceField(sq.Square))
 
   def clean(self):
     """
@@ -25,6 +27,9 @@ class Territory(me.Document):
     self.area = self.calculate_area()
 
     self.painted_area = self.calculate_painted_area()
+
+    if len(self.squares) == 0:
+      self.squares = sq.Square.generate_squares(self.start, self.end)
 
   def overlapping_territories(self):
     """
@@ -77,3 +82,4 @@ class Territory(me.Document):
 	    'area': self.area,
 	    'painted_area': self.painted_area
 	   }
+

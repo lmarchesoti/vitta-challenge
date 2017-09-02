@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify, redirect, url_for
 import mongoengine as me
 
 #from xyinc import poi
-from domain import territory
+from domain import territory, square
 
 app = Flask(__name__)
 
@@ -64,5 +64,16 @@ def find(_id):
   except IndexError:
     return redirect(url_for('static', filename='territories/not-found.html'))
 
+# squares
+@app.route('/squares/<x>/<y>', methods=['GET'])
+def find_square(x, y):
+
+  try:
+    obj = square.Square.objects(x=x, y=y)[0].serialize()
+
+    return jsonify(data=obj, error=False)
+
+  except IndexError:
+    return redirect(url_for('static', filename='squares/not-found.html'))
 if __name__ == '__main__':
   app.run(host='0.0.0.0', debug=True)
