@@ -1,16 +1,15 @@
 # -*- coding: utf-8 -*-
 
 import mongoengine as me
+from mongoengine.queryset.visitor import Q
 
 class Territory(me.Document):
   """ Implements a territory. """
 
-  #id = me.SequenceField(primary_key=True)
+  id = me.SequenceField(primary_key=True)
   name = me.StringField(required=True)
   start = me.DictField(required=True)
   end = me.DictField(required=True)
-  #start = me.PointField(required=True)
-  #end = me.PointField(required=True)
   area = me.FloatField(default=0.)
   painted_area = me.IntField(default=0)
 
@@ -20,9 +19,8 @@ class Territory(me.Document):
     Calculates derived attributes.
     """
 
-    overlapping = self.overlapping_territories()
-    if len(overlapping) > 0:
-      raise LookupError('Overlapping territory')
+    if self.overlapping_territories():
+      raise me.ValidationError('Overlapping territory')
 
     self.area = self.calculate_area()
 
@@ -30,33 +28,31 @@ class Territory(me.Document):
 
   def overlapping_territories(self):
     """
-    Finds overlapping territories in database.
-    An overlapping area has at least one of its four corners inside the
-    x and y ranges of the territory.
+    Determines if there is another registered territory overlapping this
+    location.
+    Two territories do NOT overlap if one is totally to the left/right/
+    up/down of the other.
     """
 
-    #lower_left_x = min(self.start['x'], self.end['x'])
-    #lower_left_y = min(self.start['y'], self.end['y'])
-    #upper_right_x = max(self.start['x'], self.end['x'])
-    #upper_right_x = max(self.start['y'], self.end['y'])
+    self_left  = min(self.start['x'], self.end['x'])
+    self_right = max(self.start['x'], self.end['x'])
+    self_down  = min(self.start['y'], self.end['y'])
+    self_up    = max(self.start['y'], self.end['y'])
 
-    overlap = []
+    for t in Territory.objects:
 
-    #for t in Territory.objects:
-      #if t.start
+      t_left  = min(t.start['x'], t.end['x'])
+      t_right = max(t.start['x'], t.end['x'])
+      t_down  = min(t.start['y'], t.end['y'])
+      t_up    = max(t.start['y'], t.end['y'])
 
-    # corner 1
-    #c1 = Territory.objects(start__x__gt = lower_left_x,
-			   #start__x__
+      overlap = not ((self_left > t_right) or (self_right < t_left)
+		  or (self_up   < t_down ) or (self_down  > t_up  ))
 
-    # corner 2
+      if overlap:
+        return True
 
-    # corner 3
-
-    # corner 4
-
-    # remove duplicates
-    return overlap
+    return False
 
   def calculate_area(self):
     """ Find total area. """

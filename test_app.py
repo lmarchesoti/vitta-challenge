@@ -75,7 +75,8 @@ class TestTerritories(unittest.TestCase):
     rv = self.app.post('/territories', data=json.dumps(insert_data_1),
 		       content_type='application/json')
     rv = self.app.post('/territories', data=json.dumps(insert_data_2),
-		       content_type='application/json')
+		       content_type='application/json',
+		       follow_redirects=True)
 
     self.assertTrue(b'Overlapping Territories\n' in rv.data)
 
@@ -137,7 +138,6 @@ class TestTerritories(unittest.TestCase):
     rv = self.app.post('/territories', data=json.dumps(insert_data),
 		       content_type='application/json')
     item_id = json.loads(rv.data)['data']['id']
-    print(item_id)
 
     rv_delete = self.app.delete('/territories/%s' % item_id)
 
@@ -151,7 +151,7 @@ class TestTerritories(unittest.TestCase):
 
   def test_delete_fail(self):
 
-    rv = self.app.delete('/territories/59a8870b00d26e0001d8daac', follow_redirects=True)
+    rv = self.app.delete('/territories/3', follow_redirects=True)
 
     self.assertEquals(b'Territory not found\n', rv.data)
     

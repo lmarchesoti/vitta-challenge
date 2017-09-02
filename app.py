@@ -31,7 +31,7 @@ def create_territory():
   except KeyError:
     return redirect(url_for('static', filename='territories/incomplete-data.html'))
 
-  except LookupError:
+  except me.ValidationError:
     return redirect(url_for('static', filename='territories/territory-overlay.html'))
   
 @app.route('/territories', methods=['GET'])
