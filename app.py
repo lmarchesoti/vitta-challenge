@@ -57,7 +57,15 @@ def delete(_id):
 def find(_id):
 
   try:
-    obj = territory.Territory.objects(id=_id)[0].serialize()
+
+    withpainted = request.args.get('withpainted')
+    if withpainted == 'true':
+      include_squares = True
+
+    else:
+      include_squares = False
+
+    obj = territory.Territory.objects(id=_id)[0].serialize(include_squares=include_squares)
 
     return jsonify(data=obj, error=False)
 

@@ -282,7 +282,7 @@ class TestSquares(unittest.TestCase):
     x, y = 2, 3
     self.app.patch('/squares/%s/%s/paint' % (x, y))
 
-    rv = self.app.get('/territory/%s?withpainted=true' % item_id)
+    rv = self.app.get('/territories/%s?withpainted=true' % item_id)
 
     ans ={
 	"data": {
@@ -304,7 +304,7 @@ class TestSquares(unittest.TestCase):
 
   def test_square_not_found_with_painted(self):
 
-    rv = self.app.get('/territory/%s?withpainted=true' % 13)
+    rv = self.app.get('/territories/%s?withpainted=true' % 13, follow_redirects=True)
 
     self.assertEquals(b'Territory not found\n', rv.data)
 

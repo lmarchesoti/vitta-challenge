@@ -70,23 +70,32 @@ class Territory(me.Document):
   def calculate_painted_area(self):
     """ Find total painted area. """
 
-    return 0
+    return len(self.painted_squares())
 
-  def serialize(self):
+  def painted_squares(self):
+    return [s for s in self.squares if s.painted is True]
 
-    return {
+  def serialize(self, include_squares=False):
+
+    _dict = {
 	    'id': str(self.id),
 	    'name': self.name,
 	    'start': self.start,
 	    'end': self.end,
 	    'area': self.area,
-	    'painted_area': self.painted_area
+	    'painted_area': self.calculate_painted_area()
 	   }
 
+    if include_squares:
+
+      _dict['painted_squares'] = [{'x': s.x, 'y': s.y} for s in self.painted_squares()]
+
+    return _dict
+
   @classmethod
-  def post_save(cls, sender, document, **kwargs):
+  def post_delete(cls, sender, document, **kwargs):
 
     for s in document.squares:
       s.delete()
 
-me.signals.post_delete.connect(Territory.post_save, sender=Territory)
+me.signals.post_delete.connect(Territory.post_delete, sender=Territory)
