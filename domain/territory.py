@@ -83,3 +83,10 @@ class Territory(me.Document):
 	    'painted_area': self.painted_area
 	   }
 
+  @classmethod
+  def post_save(cls, sender, document, **kwargs):
+
+    for s in document.squares:
+      s.delete()
+
+me.signals.post_delete.connect(Territory.post_save, sender=Territory)

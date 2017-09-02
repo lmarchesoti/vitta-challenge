@@ -75,5 +75,20 @@ def find_square(x, y):
 
   except IndexError:
     return redirect(url_for('static', filename='squares/not-found.html'))
+
+@app.route('/squares/<x>/<y>/paint', methods=['PATCH'])
+def paint_square(x, y):
+
+  try:
+    obj = square.Square.objects(x=x, y=y)[0]
+
+    obj.painted = True
+    obj.save()
+
+    return jsonify(data=obj.serialize(), error=False)
+
+  except IndexError:
+    return redirect(url_for('static', filename='squares/not-found.html'))
+
 if __name__ == '__main__':
   app.run(host='0.0.0.0', debug=True)
