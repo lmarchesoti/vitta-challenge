@@ -7,7 +7,7 @@ import unittest
 
 import app
 
-from domain import territory
+from domain import territory, square
 
 class TestTerritories(unittest.TestCase):
 
@@ -460,22 +460,28 @@ class TestDashboard(unittest.TestCase):
       ret = [t.serialize() for t in territory.territories_by_proportional_painted_area()]
       self.assertEquals(ordered_territories, ret)
 
-    with self.subTest():
+    with self.subTest(): # total painted / area
 
-      # total painted / area
       ans = .12
       ret = territory.total_proportional_painted_area()
 
       self.assertEquals(ans, ret)
 
-    with self.subTest():
+    with self.subTest(): # last 5 painted squares
 
-      # last 5 painted squares
-      pass
+      painted_squares = [
+	{'x': 4, 'y': 9, 'painted': True},
+	{'x': 3, 'y': 9, 'painted': True},
+	{'x': 2, 'y': 9, 'painted': True},
+	{'x': 1, 'y': 9, 'painted': True},
+	{'x': 0, 'y': 9, 'painted': True},
+      ]
 
-    with self.subTest():
+      ret = [s.serialize() for s in square.last_painted_squares(5)]
+      self.assertEquals(painted_squares, ret)
 
-      # last 5 errors
+    with self.subTest(): # last 5 errors
+
       pass
 
 if __name__ == '__main__':

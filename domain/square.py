@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+import datetime
+
 import mongoengine as me
 
 class Square(me.Document):
@@ -8,6 +10,7 @@ class Square(me.Document):
   x = me.IntField(required=True)
   y = me.IntField(required=True)
   painted = me.BooleanField(default=False)
+  last_update = me.DateTimeField()
 
   @staticmethod
   def generate_squares(start, end):
@@ -38,3 +41,12 @@ class Square(me.Document):
       'painted': self.painted
     }
 
+  def clean(self):
+    """ Sets update time. """
+
+    self.last_update = datetime.datetime.now()
+
+def last_painted_squares(n):
+  """ Retrieves the n last painted squares. """
+
+  return Square.objects(painted=True).order_by('-last_update')[0:n]

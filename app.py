@@ -104,18 +104,24 @@ def dashboard():
 
   html = '<html><head></head><body>'
 
+  # Territories by most painted area
   html += '<p> Territories by most painted area: <br/>'
   html += vh.territories_by_painted_area()
   html += '</p>'
 
+  # Territories by proportional painted area
   html += '<p> Territories by most proportional painted area: <br/>'
   html += vh.territories_by_proportional_painted_area()
   html += '</p>'
 
   # last 5 painted
+  html += '<p> Last 5 painted squares: '
+  html += vh.last_painted_squares(5)
+  html += '</p>'
 
   # last 5 errors
 
+  # Painted area / total area of all territories
   html += '<p> Painted area / total area of all territories: '
   html += str(territory.total_proportional_painted_area())
   html += '</p>'
