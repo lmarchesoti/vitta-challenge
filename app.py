@@ -3,6 +3,7 @@ import mongoengine as me
 
 #from xyinc import poi
 from domain import territory, square
+import view_helper as vh
 
 app = Flask(__name__)
 
@@ -97,6 +98,31 @@ def paint_square(x, y):
 
   except IndexError:
     return redirect(url_for('static', filename='squares/not-found.html'))
+
+@app.route('/dashboard', methods=['GET'])
+def dashboard():
+
+  html = '<html><head></head><body>'
+
+  html += '<p> Territories by most painted area: <br/>'
+  html += vh.territories_by_painted_area()
+  html += '</p>'
+
+  html += '<p> Territories by most proportional painted area: <br/>'
+  html += vh.territories_by_proportional_painted_area()
+  html += '</p>'
+
+  # last 5 painted
+
+  # last 5 errors
+
+  html += '<p> Painted area / total area of all territories: '
+  html += str(territory.total_proportional_painted_area())
+  html += '</p>'
+
+  html += '</body></html>'
+
+  return html
 
 if __name__ == '__main__':
   app.run(host='0.0.0.0', debug=True)

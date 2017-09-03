@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+import functools
+
 import mongoengine as me
 from mongoengine.queryset.visitor import Q
 from domain import square as sq
@@ -62,8 +64,8 @@ class Territory(me.Document):
   def calculate_area(self):
     """ Find total area. """
 
-    delta_x = abs(self.start['x'] - self.end['x'])
-    delta_y = abs(self.start['y'] - self.end['y'])
+    delta_x = abs(self.start['x'] - self.end['x']) + 1
+    delta_y = abs(self.start['y'] - self.end['y']) + 1
 
     return delta_x * delta_y
 
@@ -99,3 +101,28 @@ class Territory(me.Document):
       s.delete()
 
 me.signals.post_delete.connect(Territory.post_delete, sender=Territory)
+
+def territories_by_painted_area():
+
+  territories = Territory.objects
+
+  return sorted(territories, key=lambda x: x.calculate_painted_area(),
+		reverse=True)
+
+def territories_by_proportional_painted_area():
+
+  territories = Territory.objects
+
+  return sorted(territories, key=lambda x: x.calculate_painted_area() / x.area,
+		reverse=True)
+
+def total_proportional_painted_area():
+
+  territories = Territory.objects
+
+  painted_areas = [t.calculate_painted_area() for t in territories]
+
+  total_painted = sum(painted_areas)
+  total_area = sum([t.area for t in territories])
+
+  return total_painted / total_area

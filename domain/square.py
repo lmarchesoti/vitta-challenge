@@ -11,17 +11,18 @@ class Square(me.Document):
 
   @staticmethod
   def generate_squares(start, end):
+    """ Generates the necessary squares for a territory's boundaries. """
 
     left  = min(start['x'], end['x'])
     right = max(start['x'], end['x'])
-    down  = min(start['y'], end['x'])
-    up    = max(start['x'], end['x'])
+    down  = min(start['y'], end['y'])
+    up    = max(start['y'], end['y'])
 
     squares = []
 
-    for x in range(right):
+    for x in range(right-left+1):
 
-      for y in range(up):
+      for y in range(up-down+1):
         s = Square(x=left+x, y=down+y, painted=False)
         s.save()
 

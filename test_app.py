@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+import os
+
 import json
 import unittest
 
@@ -307,6 +309,174 @@ class TestSquares(unittest.TestCase):
     rv = self.app.get('/territories/%s?withpainted=true' % 13, follow_redirects=True)
 
     self.assertEquals(b'Territory not found\n', rv.data)
+
+class TestDashboard(unittest.TestCase):
+
+  def setUp(self):
+    app.app.testing = True
+    self.app = app.app.test_client()
+
+  def tearDown(self): self.delete_all_territories()
+
+  def delete_all_territories(self):
+    for p in territory.Territory.objects:
+      p.delete()
+
+  def test_main_dashboard(self):
+
+    # issue commands
+    insert_data = { 
+		    "name": "A",
+		    "start": { "x": 0, "y": 0},
+		    "end"  : { "x": 4, "y": 4}
+		  }
+    self.app.post('/territories', data=json.dumps(insert_data),
+		       content_type='application/json')
+    insert_data = { 
+		    "name": "B",
+		    "start": { "x": 0, "y": 5},
+		    "end"  : { "x": 4, "y": 9}
+		  }
+    self.app.post('/territories', data=json.dumps(insert_data),
+		       content_type='application/json')
+    insert_data = { 
+		    "name": "C",
+		    "start": { "x": 5, "y": 0},
+		    "end"  : { "x": 9, "y": 9}
+		  }
+    self.app.post('/territories', data=json.dumps(insert_data),
+		       content_type='application/json')
+
+    x, y = 3, 1
+    self.app.patch('/squares/%s/%s/paint' % (x, y))
+    x, y = 5, 0
+    self.app.patch('/squares/%s/%s/paint' % (x, y))
+    x, y = 6, 0
+    self.app.patch('/squares/%s/%s/paint' % (x, y))
+    x, y = 7, 0
+    self.app.patch('/squares/%s/%s/paint' % (x, y))
+    x, y = 8, 0
+    self.app.patch('/squares/%s/%s/paint' % (x, y))
+    x, y = 9, 0
+    self.app.patch('/squares/%s/%s/paint' % (x, y))
+    x, y = 5, 1
+    self.app.patch('/squares/%s/%s/paint' % (x, y))
+    x, y = 10, 10
+    self.app.patch('/squares/%s/%s/paint' % (x, y))
+    x, y = 0, 9
+    self.app.patch('/squares/%s/%s/paint' % (x, y))
+    x, y = 1, 9
+    self.app.patch('/squares/%s/%s/paint' % (x, y))
+    x, y = 2, 9
+    self.app.patch('/squares/%s/%s/paint' % (x, y))
+    x, y = 3, 9
+    self.app.patch('/squares/%s/%s/paint' % (x, y))
+    x, y = 4, 9
+    self.app.patch('/squares/%s/%s/paint' % (x, y))
+
+    self.app.get('/territories/999')
+
+    x, y = 11, 11
+    self.app.patch('/squares/%s/%s/paint' % (x, y))
+
+    insert_data = { 
+		    "name": "D",
+		    "start": { "x": 7, "y": 0},
+		    "end"  : { "x": 9, "y": 6}
+		  }
+    self.app.post('/territories', data=json.dumps(insert_data),
+		       content_type='application/json')
+
+    insert_data = { 
+		    "name": "D",
+		    "end"  : { "x": 9, "y": 6}
+		  }
+    self.app.post('/territories', data=json.dumps(insert_data),
+		       content_type='application/json')
+
+    # access dashboard
+    rv = self.app.get('/dashboard')
+
+    # compare answer
+    with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'test_app', 'dashboard.html'), 'r') as f:
+      ans = f.read()
+
+    print(rv.data)
+
+    with self.subTest(): # painted area
+
+      ordered_territories = [
+	{ 'id': '3',
+	  'name': 'C',
+	  'start': {'x': 5, 'y': 0},
+	  'end': {'x': 9, 'y': 9},
+	  'area': 50.0,
+	  'painted_area': 6
+	},
+	{ 'id': '2',
+	  'name': 'B',
+	  'start': {'x': 0, 'y': 5},
+	  'end': {'x': 4, 'y': 9},
+	  'area': 25.0,
+	  'painted_area': 5
+	},
+	{ 'id': '1',
+	  'name': 'A',
+	  'start': {'x': 0, 'y': 0},
+	  'end': {'x': 4, 'y': 4},
+	  'area': 25.0,
+	  'painted_area': 1
+	},
+      ]
+      ret = [t.serialize() for t in territory.territories_by_painted_area()]
+      self.assertEquals(ordered_territories, ret)
+
+    with self.subTest(): # proportional painted area
+
+      ordered_territories = [
+	{ 'id': '2',
+	  'name': 'B',
+	  'start': {'x': 0, 'y': 5},
+	  'end': {'x': 4, 'y': 9},
+	  'area': 25.0,
+	  'painted_area': 5
+	},
+	{ 'id': '3',
+	  'name': 'C',
+	  'start': {'x': 5, 'y': 0},
+	  'end': {'x': 9, 'y': 9},
+	  'area': 50.0,
+	  'painted_area': 6
+	},
+	{ 'id': '1',
+	  'name': 'A',
+	  'start': {'x': 0, 'y': 0},
+	  'end': {'x': 4, 'y': 4},
+	  'area': 25.0,
+	  'painted_area': 1
+	},
+      ]
+
+      ret = [t.serialize() for t in territory.territories_by_proportional_painted_area()]
+      self.assertEquals(ordered_territories, ret)
+
+    with self.subTest():
+
+      # total painted / area
+      ans = .12
+      ret = territory.total_proportional_painted_area()
+
+      self.assertEquals(ans, ret)
+
+    with self.subTest():
+
+      # last 5 painted squares
+      pass
+
+    with self.subTest():
+
+      # last 5 errors
+      pass
 
 if __name__ == '__main__':
   unittest.main()
