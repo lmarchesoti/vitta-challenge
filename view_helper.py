@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from domain import territory, square
+from domain import territory, square, app_error
 
 def territories_by_painted_area():
 
@@ -36,6 +36,19 @@ def last_painted_squares(n):
 
   for s in squares:
     html += '<li>' + str(s.serialize()) + '</li>'
+
+  html += '</ol>'
+
+  return html
+
+def last_errors(n):
+
+  errors = app_error.last_errors(n)
+
+  html = '<ol>'
+
+  for e in errors:
+    html += '<li>' + str(e.serialize()) + '</li>'
 
   html += '</ol>'
 

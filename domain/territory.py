@@ -64,8 +64,8 @@ class Territory(me.Document):
   def calculate_area(self):
     """ Find total area. """
 
-    delta_x = abs(self.start['x'] - self.end['x']) + 1
-    delta_y = abs(self.start['y'] - self.end['y']) + 1
+    delta_x = abs(self.start['x'] - self.end['x'])# + 1
+    delta_y = abs(self.start['y'] - self.end['y'])# + 1
 
     return delta_x * delta_y
 

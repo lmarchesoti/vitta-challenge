@@ -7,7 +7,7 @@ import unittest
 
 import app
 
-from domain import territory, square
+from domain import territory, square, app_error
 
 class TestTerritories(unittest.TestCase):
 
@@ -401,7 +401,7 @@ class TestDashboard(unittest.TestCase):
     with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'test_app', 'dashboard.html'), 'r') as f:
       ans = f.read()
 
-    print(rv.data)
+    #print(rv.data)
 
     with self.subTest(): # painted area
 
@@ -410,21 +410,21 @@ class TestDashboard(unittest.TestCase):
 	  'name': 'C',
 	  'start': {'x': 5, 'y': 0},
 	  'end': {'x': 9, 'y': 9},
-	  'area': 50.0,
+	  'area': 36.0,
 	  'painted_area': 6
 	},
 	{ 'id': '2',
 	  'name': 'B',
 	  'start': {'x': 0, 'y': 5},
 	  'end': {'x': 4, 'y': 9},
-	  'area': 25.0,
+	  'area': 16.0,
 	  'painted_area': 5
 	},
 	{ 'id': '1',
 	  'name': 'A',
 	  'start': {'x': 0, 'y': 0},
 	  'end': {'x': 4, 'y': 4},
-	  'area': 25.0,
+	  'area': 16.0,
 	  'painted_area': 1
 	},
       ]
@@ -438,21 +438,21 @@ class TestDashboard(unittest.TestCase):
 	  'name': 'B',
 	  'start': {'x': 0, 'y': 5},
 	  'end': {'x': 4, 'y': 9},
-	  'area': 25.0,
+	  'area': 16.0,
 	  'painted_area': 5
 	},
 	{ 'id': '3',
 	  'name': 'C',
 	  'start': {'x': 5, 'y': 0},
 	  'end': {'x': 9, 'y': 9},
-	  'area': 50.0,
+	  'area': 36.0,
 	  'painted_area': 6
 	},
 	{ 'id': '1',
 	  'name': 'A',
 	  'start': {'x': 0, 'y': 0},
 	  'end': {'x': 4, 'y': 4},
-	  'area': 25.0,
+	  'area': 16.0,
 	  'painted_area': 1
 	},
       ]
@@ -462,7 +462,7 @@ class TestDashboard(unittest.TestCase):
 
     with self.subTest(): # total painted / area
 
-      ans = .12
+      ans = .17647058823529413
       ret = territory.total_proportional_painted_area()
 
       self.assertEquals(ans, ret)
@@ -482,7 +482,16 @@ class TestDashboard(unittest.TestCase):
 
     with self.subTest(): # last 5 errors
 
-      pass
+      last_errors = [
+	'territories/incomplete-data',
+	'territories/territory-overlay',
+	'squares/not-found',
+	'territories/not-found',
+	'squares/not-found',
+      ]
+	
+      ret = [e.serialize() for e in app_error.last_errors(5)]
+      self.assertEquals(last_errors, ret)
 
 if __name__ == '__main__':
   unittest.main()

@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify, redirect, url_for
 import mongoengine as me
 
 #from xyinc import poi
-from domain import territory, square
+from domain import territory, square, app_error
 import view_helper as vh
 
 app = Flask(__name__)
@@ -30,9 +30,13 @@ def create_territory():
     return jsonify(data=t.serialize(), error=False)
 
   except KeyError:
+    e = app_error.AppError(type='territories/incomplete-data')
+    e.save()
     return redirect(url_for('static', filename='territories/incomplete-data.html'))
 
   except me.ValidationError:
+    e = app_error.AppError(type='territories/territory-overlay')
+    e.save()
     return redirect(url_for('static', filename='territories/territory-overlay.html'))
   
 @app.route('/territories', methods=['GET'])
@@ -52,6 +56,8 @@ def delete(_id):
     return jsonify(error=False)
 
   except IndexError:
+    e = app_error.AppError(type='territories/not-found')
+    e.save()
     return redirect(url_for('static', filename='territories/not-found.html'))
 
 @app.route('/territories/<_id>', methods=['GET'])
@@ -71,6 +77,8 @@ def find(_id):
     return jsonify(data=obj, error=False)
 
   except IndexError:
+    e = app_error.AppError(type='territories/not-found')
+    e.save()
     return redirect(url_for('static', filename='territories/not-found.html'))
 
 # squares
@@ -83,6 +91,8 @@ def find_square(x, y):
     return jsonify(data=obj, error=False)
 
   except IndexError:
+    e = app_error.AppError(type='squares/not-found')
+    e.save()
     return redirect(url_for('static', filename='squares/not-found.html'))
 
 @app.route('/squares/<x>/<y>/paint', methods=['PATCH'])
@@ -97,6 +107,8 @@ def paint_square(x, y):
     return jsonify(data=obj.serialize(), error=False)
 
   except IndexError:
+    e = app_error.AppError(type='squares/not-found')
+    e.save()
     return redirect(url_for('static', filename='squares/not-found.html'))
 
 @app.route('/dashboard', methods=['GET'])
@@ -105,12 +117,12 @@ def dashboard():
   html = '<html><head></head><body>'
 
   # Territories by most painted area
-  html += '<p> Territories by most painted area: <br/>'
+  html += '<p> Territories by most painted area: '
   html += vh.territories_by_painted_area()
   html += '</p>'
 
   # Territories by proportional painted area
-  html += '<p> Territories by most proportional painted area: <br/>'
+  html += '<p> Territories by most proportional painted area: '
   html += vh.territories_by_proportional_painted_area()
   html += '</p>'
 
@@ -120,10 +132,13 @@ def dashboard():
   html += '</p>'
 
   # last 5 errors
+  html += '<p> Last 5 errors: '
+  html += vh.last_errors(5)
+  html += '</p>'
 
   # Painted area / total area of all territories
   html += '<p> Painted area / total area of all territories: '
-  html += str(territory.total_proportional_painted_area())
+  html += '%.2f' % (territory.total_proportional_painted_area())
   html += '</p>'
 
   html += '</body></html>'
