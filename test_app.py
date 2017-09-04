@@ -397,10 +397,6 @@ class TestDashboard(unittest.TestCase):
     # access dashboard
     rv = self.app.get('/dashboard')
 
-    # compare answer
-    with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'test_app', 'dashboard.html'), 'r') as f:
-      ans = f.read()
-
     #print(rv.data)
 
     with self.subTest(): # painted area
